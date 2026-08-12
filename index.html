@@ -1,0 +1,1125 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MAYA — Mitra Administrasi Desa Gayaman</title>
+    <meta name="description" content="MAYA adalah asisten digital Desa Gayaman yang membantu masyarakat memperoleh informasi layanan administrasi melalui WhatsApp.">
+    <meta name="theme-color" content="#10b981">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    
+    <!-- Open Graph Metadata -->
+    <meta property="og:title" content="MAYA — Mitra Administrasi Desa Gayaman">
+    <meta property="og:description" content="Pelayanan Desa, Semudah Chat. Akses layanan administrasi Desa Gayaman melalui asisten digital MAYA.">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons (Phosphor Icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        brand: {
+                            50: '#ecfdf5', 100: '#d1fae5', 400: '#34d399',
+                            500: '#10b981', 600: '#059669', 900: '#064e3b',
+                        },
+                        wa: {
+                            light: '#e5ddd5', dark: '#0b141a',
+                            bubbleInLight: '#ffffff', bubbleOutLight: '#dcf8c6',
+                            bubbleInDark: '#202c33', bubbleOutDark: '#005c4b',
+                            headerLight: '#008069', headerDark: '#1f2c34'
+                        },
+                        dark: { bg: '#020617', surface: '#0f172a', border: '#1e293b' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* =========================
+           CUSTOM STYLES & GLOBALS
+           ========================= */
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.3);
+            --text-main: #0f172a;
+        }
+
+        .dark {
+            --glass-bg: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(30, 41, 59, 0.8);
+            --text-main: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: theme('colors.slate.50');
+            color: var(--text-main);
+            overflow-x: hidden;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark body { background-color: theme('colors.dark.bg'); }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+
+        /* Glassmorphism */
+        .glass { background: var(--glass-bg); backdrop-filter: blur(12px); border: 1px solid var(--glass-border); }
+        .glass-card { background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05); transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .dark .glass-card { box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2); }
+        .glass-card:hover { transform: translateY(-5px); }
+
+        /* Chatbot Simulator Styles */
+        .chat-bg { background-color: theme('colors.wa.light'); background-image: url('data:image/svg+xml,%3Csvg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="%239C92AC" fill-opacity="0.06" fill-rule="evenodd"%3E%3Ccircle cx="3" cy="3" r="3"/%3E%3Ccircle cx="13" cy="13" r="3"/%3E%3C/g%3E%3C/svg%3E'); }
+        .dark .chat-bg { background-color: theme('colors.wa.dark'); }
+        .bubble-in { background-color: theme('colors.wa.bubbleInLight'); color: #111b21; border-radius: 0 8px 8px 8px; box-shadow: 0 1px 0.5px rgba(11,20,26,.13); white-space: pre-wrap; }
+        .bubble-out { background-color: theme('colors.wa.bubbleOutLight'); color: #111b21; border-radius: 8px 0 8px 8px; box-shadow: 0 1px 0.5px rgba(11,20,26,.13); white-space: pre-wrap; }
+        .dark .bubble-in { background-color: theme('colors.wa.bubbleInDark'); color: #e9edef; }
+        .dark .bubble-out { background-color: theme('colors.wa.bubbleOutDark'); color: #e9edef; }
+        
+        /* Typing indicator */
+        .typing-dot { animation: typing 1.4s infinite ease-in-out both; }
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* ThreeJS Canvas */
+        #hero-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        #arch-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: auto; touch-action: none; }
+
+        .text-gradient { background: linear-gradient(135deg, #10b981, #3b82f6); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gsap-hidden { opacity: 0; visibility: hidden; }
+
+        /* WA Text Formatting Simulation */
+        .wa-bold { font-weight: bold; }
+        .wa-italic { font-style: italic; }
+        
+        /* Message Animation */
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+        .msg-anim { animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+    </style>
+</head>
+<body class="antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- LOADING SCREEN -->
+    <div id="loader" class="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-white dark:bg-dark-bg transition-opacity duration-500">
+        <div class="relative w-24 h-24 mb-6">
+            <div class="absolute inset-0 rounded-full border-4 border-brand-100 dark:border-slate-800"></div>
+            <div class="absolute inset-0 rounded-full border-4 border-brand-500 border-t-transparent animate-spin"></div>
+            <i class="ph-fill ph-robot absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-4xl text-brand-500"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-800 dark:text-white tracking-wider">MAYA</h1>
+        <p class="text-sm text-slate-500 dark:text-slate-400 mt-2 font-medium">Mitra Administrasi Desa Gayaman</p>
+    </div>
+
+    <!-- NAVBAR -->
+    <nav id="navbar" class="fixed w-full z-40 transition-all duration-300 py-4">
+        <div class="container mx-auto px-4 md:px-6 lg:px-8">
+            <div class="glass rounded-2xl px-6 py-3 flex justify-between items-center shadow-sm">
+                <!-- Logo -->
+                <a href="#" class="flex items-center gap-2 group">
+                    <div class="w-10 h-10 rounded-full bg-brand-500 flex items-center justify-center text-white group-hover:scale-110 transition-transform shadow-lg shadow-brand-500/30">
+                        <i class="ph-fill ph-robot text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="block font-bold text-lg leading-tight dark:text-white">MAYA</span>
+                        <span class="block text-[10px] uppercase tracking-wider text-slate-500 dark:text-slate-400 font-semibold">Desa Gayaman</span>
+                    </div>
+                </a>
+
+                <!-- Desktop Menu -->
+                <div class="hidden lg:flex items-center space-x-6">
+                    <a href="#tentang" class="text-sm font-medium hover:text-brand-500 transition-colors">Tentang</a>
+                    <a href="#simulator" class="text-sm font-medium hover:text-brand-500 transition-colors">Coba MAYA</a>
+                    <a href="#layanan" class="text-sm font-medium hover:text-brand-500 transition-colors">Layanan</a>
+                    <a href="#pakkades" class="text-sm font-medium hover:text-brand-500 transition-colors">PAK KADES</a>
+                    <a href="#cara-kerja" class="text-sm font-medium hover:text-brand-500 transition-colors">Cara Kerja</a>
+                </div>
+
+                <!-- Right Actions -->
+                <div class="flex items-center gap-3">
+                    <button id="theme-toggle" class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                        <i id="theme-icon" class="ph ph-moon text-lg dark:text-white"></i>
+                    </button>
+                    <a href="https://wa.me/6285882370975" target="_blank" class="hidden sm:flex bg-brand-500 hover:bg-brand-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold transition-transform hover:scale-105 shadow-lg shadow-brand-500/30 items-center gap-2">
+                        <i class="ph-fill ph-whatsapp-logo text-lg"></i> Chat MAYA
+                    </a>
+                    <button id="mobile-menu-btn" class="lg:hidden w-10 h-10 flex items-center justify-center text-slate-800 dark:text-white">
+                        <i class="ph ph-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <!-- Mobile Dropdown -->
+        <div id="mobile-menu" class="hidden absolute top-full left-0 w-full px-4 mt-2">
+            <div class="glass-card rounded-2xl p-4 flex flex-col space-y-2">
+                <a href="#tentang" class="mobile-link p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium">Tentang</a>
+                <a href="#simulator" class="mobile-link p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium">Coba MAYA</a>
+                <a href="#layanan" class="mobile-link p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium">Layanan</a>
+                <a href="#pakkades" class="mobile-link p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 font-medium">PAK KADES</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO SECTION -->
+    <section id="hero" class="relative min-h-[90vh] flex items-center pt-24 pb-12 overflow-hidden">
+        <canvas id="hero-canvas"></canvas>
+        <div class="absolute inset-0 bg-gradient-to-b from-white/80 via-white/50 to-transparent dark:from-dark-bg/90 dark:via-dark-bg/60 dark:to-transparent z-0"></div>
+
+        <div class="container mx-auto px-4 md:px-6 lg:px-8 relative z-10">
+            <div class="max-w-3xl">
+                <div class="gsap-hidden hero-elem inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border border-brand-500/30 text-brand-600 dark:text-brand-400 text-sm font-semibold mb-6">
+                    <span class="relative flex h-2 w-2">
+                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                      <span class="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+                    </span>
+                    Sistem Digital Aktif
+                </div>
+                
+                <h1 class="gsap-hidden hero-elem text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.1] mb-6">
+                    Pelayanan Desa, <br/>
+                    <span class="text-gradient">Semudah Chat.</span>
+                </h1>
+                
+                <p class="gsap-hidden hero-elem text-lg md:text-xl text-slate-600 dark:text-slate-300 mb-10 max-w-2xl leading-relaxed">
+                    <strong>MAYA</strong> (Mitra Administrasi Desa Gayaman) membantu warga memperoleh informasi layanan administrasi dengan cara yang lebih mudah, cepat, dan familiar melalui WhatsApp.
+                </p>
+                
+                <div class="gsap-hidden hero-elem flex flex-col sm:flex-row gap-4">
+                    <a href="https://wa.me/6285882370975" target="_blank" class="bg-brand-500 hover:bg-brand-600 text-white px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 transition-transform hover:scale-105 shadow-xl shadow-brand-500/30">
+                        <i class="ph-fill ph-whatsapp-logo text-2xl"></i>
+                        Chat dengan MAYA
+                    </a>
+                    <a href="#simulator" class="glass text-slate-800 dark:text-white px-8 py-4 rounded-full font-bold text-lg flex items-center justify-center gap-3 transition-colors hover:bg-slate-100 dark:hover:bg-slate-800">
+                        <i class="ph-fill ph-play-circle text-2xl"></i>
+                        Coba Simulasi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- QUICK STATS -->
+    <section class="py-12 border-y border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-dark-surface/50 backdrop-blur-md relative z-10">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                <div class="gsap-stat">
+                    <div class="text-4xl font-bold text-slate-900 dark:text-white mb-2"><span class="counter" data-target="9">0</span></div>
+                    <div class="text-sm font-medium text-slate-500">Pilihan Layanan</div>
+                </div>
+                <div class="gsap-stat">
+                    <div class="text-4xl font-bold text-slate-900 dark:text-white mb-2"><span class="counter" data-target="24">0</span>/7</div>
+                    <div class="text-sm font-medium text-slate-500">Akses Informasi</div>
+                </div>
+                <div class="gsap-stat">
+                    <div class="text-4xl font-bold text-brand-500 mb-2"><i class="ph-fill ph-whatsapp-logo"></i></div>
+                    <div class="text-sm font-medium text-slate-500">Media Pelayanan</div>
+                </div>
+                <div class="gsap-stat">
+                    <div class="text-4xl font-bold text-brand-500 mb-2"><i class="ph-fill ph-robot"></i></div>
+                    <div class="text-sm font-medium text-slate-500">Asisten Digital</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- APA ITU MAYA -->
+    <section id="tentang" class="py-24 relative z-10">
+        <div class="container mx-auto px-4 md:px-6 lg:px-8">
+            <div class="text-center max-w-3xl mx-auto mb-16">
+                <h2 class="gsap-up text-brand-500 font-bold tracking-wide uppercase text-sm mb-3">Kenalan dengan MAYA</h2>
+                <h3 class="gsap-up text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-6">Bukan Sekadar Chatbot Biasa</h3>
+                <p class="gsap-up text-lg text-slate-600 dark:text-slate-400">
+                    MAYA adalah jembatan digital yang dirancang khusus untuk mempermudah alur birokrasi. Cukup kirim pesan, biarkan MAYA memandu kebutuhan administrasi Anda.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="gsap-up glass-card p-8 rounded-3xl group">
+                    <div class="w-14 h-14 rounded-2xl bg-brand-100 dark:bg-brand-900/30 flex items-center justify-center mb-6 text-brand-600 dark:text-brand-400 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-chat-circle-text text-3xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold text-slate-900 dark:text-white mb-3">Sangat Mudah</h4>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed">Cukup menggunakan antarmuka WhatsApp yang sudah sangat familiar bagi seluruh warga desa.</p>
+                </div>
+                
+                <div class="gsap-up glass-card p-8 rounded-3xl group" style="transition-delay: 100ms;">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mb-6 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-lightning text-3xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold text-slate-900 dark:text-white mb-3">Lebih Cepat</h4>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed">Informasi layanan & persyaratan dokumen dapat diperoleh instan tanpa harus datang ke balai desa.</p>
+                </div>
+
+                <div class="gsap-up glass-card p-8 rounded-3xl group" style="transition-delay: 200ms;">
+                    <div class="w-14 h-14 rounded-2xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center mb-6 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform">
+                        <i class="ph-fill ph-headset text-3xl"></i>
+                    </div>
+                    <h4 class="text-xl font-bold text-slate-900 dark:text-white mb-3">Tetap Terhubung</h4>
+                    <p class="text-slate-600 dark:text-slate-400 leading-relaxed">Jika membutuhkan bantuan lebih lanjut, sistem dapat langsung mengarahkan Anda kepada petugas desa (CS).</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SIMULATOR INTERAKTIF -->
+    <section id="simulator" class="py-24 bg-slate-100/50 dark:bg-dark-surface relative z-10 overflow-hidden">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div class="flex flex-col lg:flex-row gap-12 items-center">
+                
+                <!-- Left: Info -->
+                <div class="w-full lg:w-5/12">
+                    <h2 class="gsap-left text-brand-500 font-bold tracking-wide uppercase text-sm mb-3">Interactive Experience</h2>
+                    <h3 class="gsap-left text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">Coba Simulasi <br>Chat MAYA</h3>
+                    <p class="gsap-left text-lg text-slate-600 dark:text-slate-400 mb-8">
+                        Berinteraksi langsung dengan sistem tiruan MAYA di samping ini. Sistem ini menggunakan <strong>logika mesin status (State Machine) yang sama persis</strong> dengan bot WhatsApp aslinya.
+                    </p>
+                    <div class="gsap-left p-4 rounded-xl glass border-l-4 border-l-brand-500 text-sm text-slate-700 dark:text-slate-300">
+                        <p><strong>Cara Penggunaan:</strong> <br>Ketik angka pilihan menu (misal: <strong>1</strong>) pada kolom input, lalu tekan Enter atau tombol kirim.</p>
+                    </div>
+                </div>
+
+                <!-- Right: Chat Interface -->
+                <div class="w-full lg:w-7/12 flex justify-center gsap-right">
+                    <!-- Phone Mockup Container -->
+                    <div class="relative w-full max-w-[400px] h-[700px] bg-slate-900 rounded-[2.5rem] border-[8px] border-slate-900 shadow-2xl overflow-hidden flex flex-col">
+                        
+                        <!-- Header -->
+                        <div class="bg-wa-headerLight dark:bg-wa-headerDark text-white px-4 py-3 flex items-center gap-3 z-10 shrink-0 shadow-md">
+                            <i class="ph-bold ph-arrow-left text-xl cursor-pointer"></i>
+                            <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 overflow-hidden">
+                                <i class="ph-fill ph-robot text-2xl text-wa-headerLight dark:text-wa-headerDark"></i>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="font-semibold text-[16px] truncate">MAYA - Desa Gayaman</h4>
+                                <p class="text-[12px] text-white/90 flex items-center gap-1">
+                                    <span class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> Online
+                                </p>
+                            </div>
+                            <i class="ph-fill ph-video-camera text-xl opacity-70"></i>
+                            <i class="ph-fill ph-phone text-xl opacity-70"></i>
+                            <i class="ph-bold ph-dots-three-vertical text-xl"></i>
+                        </div>
+
+                        <!-- Chat Area -->
+                        <div id="sim-chat-box" class="flex-1 chat-bg overflow-y-auto p-4 flex flex-col gap-2 relative scroll-smooth">
+                            <div class="flex justify-center mb-2">
+                                <span class="bg-[#e1f3fb] text-[#54656f] dark:bg-[#182229] dark:text-[#8696a0] text-[12px] px-3 py-1 rounded-lg shadow-sm font-medium">Hari ini</span>
+                            </div>
+                            <div class="flex justify-center mb-4">
+                                <span class="bg-[#ffeecd] text-[#54656f] dark:bg-[#182229] dark:text-[#ffd279] text-[12px] px-3 py-2 rounded-lg shadow-sm font-medium text-center flex items-center gap-2 max-w-[90%]">
+                                    <i class="ph-fill ph-lock-key text-sm"></i> Pesan disimulasikan secara lokal (Frontend-only).
+                                </span>
+                            </div>
+                            <!-- Messages will be injected here -->
+                            
+                            <!-- Typing Indicator -->
+                            <div id="sim-typing" class="hidden max-w-[85%] self-start flex-col group mb-2">
+                                <div class="bubble-in px-4 py-3 shadow-sm flex gap-1 items-center h-10 w-16">
+                                    <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                                    <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                                    <div class="w-2 h-2 bg-slate-400 rounded-full typing-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Input Area -->
+                        <div class="bg-[#f0f2f5] dark:bg-[#202c33] px-2 py-3 flex items-end gap-2 z-10 shrink-0">
+                            <button id="sim-reset" class="w-10 h-10 rounded-full flex items-center justify-center text-[#54656f] dark:text-[#8696a0] hover:text-red-500 transition-colors shrink-0" title="Reset Simulasi">
+                                <i class="ph-bold ph-arrows-clockwise text-2xl"></i>
+                            </button>
+                            <div class="flex-1 bg-white dark:bg-[#2a3942] rounded-3xl min-h-[42px] flex items-center px-4 overflow-hidden">
+                                <input type="text" id="sim-input" placeholder="Ketik pesan..." class="w-full bg-transparent border-none focus:outline-none text-sm text-slate-800 dark:text-white py-2" autocomplete="off">
+                            </div>
+                            <button id="sim-send" class="w-10 h-10 rounded-full bg-[#00a884] flex items-center justify-center text-white shrink-0 hover:bg-[#008f6f] transition-colors shadow-sm">
+                                <i class="ph-fill ph-paper-plane-right text-xl -ml-0.5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICE EXPLORER -->
+    <section id="layanan" class="py-24 relative z-10">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div class="text-center max-w-2xl mx-auto mb-16">
+                <h2 class="gsap-up text-brand-500 font-bold tracking-wide uppercase text-sm mb-3">Eksplorasi</h2>
+                <h3 class="gsap-up text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-4">Layanan MAYA</h3>
+                <p class="gsap-up text-slate-600 dark:text-slate-400">Peta layanan informasi administrasi yang terintegrasi di dalam sistem MAYA.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="service-grid">
+                <!-- Injected via JS to keep HTML clean -->
+            </div>
+        </div>
+    </section>
+
+    <!-- PAK KADES SECTION -->
+    <section id="pakkades" class="py-24 bg-slate-900 dark:bg-black text-white relative overflow-hidden">
+        <div class="absolute inset-0 opacity-20">
+            <svg class="w-full h-full" xmlns="http://www.w3.org/2000/svg"><defs><pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(#grid)" /></svg>
+        </div>
+        
+        <div class="container mx-auto px-4 lg:px-8 relative z-10">
+            <div class="flex flex-col lg:flex-row items-center gap-12 bg-gradient-to-br from-blue-900 to-indigo-900 rounded-[2.5rem] p-8 md:p-12 border border-blue-800 shadow-2xl">
+                <div class="w-full lg:w-1/2 gsap-left">
+                    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/20 text-blue-200 text-sm font-bold mb-6 border border-blue-400/30">
+                        <i class="ph-fill ph-star"></i> Program Khusus
+                    </div>
+                    <h2 class="text-4xl md:text-5xl font-extrabold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-200 to-white">
+                        PAK KADES
+                    </h2>
+                    <h3 class="text-xl text-blue-200 font-medium mb-6 leading-relaxed">
+                        Pelayanan Administrasi Kapan Saja <br>Desa Gayaman
+                    </h3>
+                    <p class="text-blue-100 text-lg leading-relaxed mb-8">
+                        Layanan portal online independen yang membantu warga mengajukan permohonan administrasi tertentu melalui perangkat mereka, tanpa harus datang hanya untuk memulai proses. MAYA siap memandu Anda menuju portal ini.
+                    </p>
+                    
+                    <div class="flex flex-wrap gap-2 mb-8">
+                        <span class="px-3 py-1.5 bg-black/30 rounded-lg text-sm border border-white/10 flex items-center gap-2"><i class="ph-fill ph-check-circle text-green-400"></i> SKTM</span>
+                        <span class="px-3 py-1.5 bg-black/30 rounded-lg text-sm border border-white/10 flex items-center gap-2"><i class="ph-fill ph-check-circle text-green-400"></i> Domisili</span>
+                        <span class="px-3 py-1.5 bg-black/30 rounded-lg text-sm border border-white/10 flex items-center gap-2"><i class="ph-fill ph-check-circle text-green-400"></i> SKU</span>
+                        <span class="px-3 py-1.5 bg-black/30 rounded-lg text-sm border border-white/10 flex items-center gap-2"><i class="ph-fill ph-check-circle text-green-400"></i> Belum Menikah</span>
+                    </div>
+
+                    <a href="http://s.id/PAKKADESGAYAMAN" target="_blank" class="inline-flex items-center gap-2 bg-white text-blue-900 px-8 py-4 rounded-full font-bold hover:bg-blue-50 transition-colors shadow-xl">
+                        Buka Portal PAK KADES <i class="ph-bold ph-arrow-right"></i>
+                    </a>
+                </div>
+                
+                <div class="w-full lg:w-1/2 flex justify-center gsap-right">
+                    <!-- Dashboard Mockup -->
+                    <div class="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                        <div class="bg-slate-100 px-4 py-3 flex items-center gap-2 border-b">
+                            <div class="w-3 h-3 rounded-full bg-red-400"></div><div class="w-3 h-3 rounded-full bg-amber-400"></div><div class="w-3 h-3 rounded-full bg-green-400"></div>
+                            <span class="text-xs text-slate-500 font-mono ml-2">s.id/PAKKADESGAYAMAN</span>
+                        </div>
+                        <div class="p-6">
+                            <div class="h-6 w-1/3 bg-slate-200 rounded mb-6"></div>
+                            <div class="space-y-4">
+                                <div class="h-12 w-full bg-slate-100 border border-slate-200 rounded-lg flex items-center px-4"><div class="w-1/2 h-3 bg-slate-300 rounded"></div></div>
+                                <div class="h-12 w-full bg-slate-100 border border-slate-200 rounded-lg flex items-center px-4"><div class="w-1/3 h-3 bg-slate-300 rounded"></div></div>
+                                <div class="h-24 w-full bg-slate-100 border border-slate-200 rounded-lg flex p-4"><div class="w-1/4 h-3 bg-slate-300 rounded"></div></div>
+                                <div class="h-12 w-full bg-blue-600 rounded-lg mt-2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- HOW MAYA WORKS -->
+    <section id="cara-kerja" class="py-24 relative z-10">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="gsap-up text-brand-500 font-bold tracking-wide uppercase text-sm mb-3">Alur Sistem</h2>
+                <h3 class="gsap-up text-3xl md:text-4xl font-bold text-slate-900 dark:text-white">Bagaimana MAYA Bekerja?</h3>
+            </div>
+
+            <div class="max-w-4xl mx-auto relative">
+                <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-200 dark:bg-slate-800 transform -translate-x-1/2"></div>
+                
+                <div class="space-y-12" id="flow-container">
+                    <!-- Flow steps injected via JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3D MAYA ARCHITECTURE -->
+    <section class="py-24 relative overflow-hidden bg-slate-950 text-white min-h-[80vh] flex items-center border-y border-slate-800">
+        <canvas id="arch-canvas"></canvas>
+        <div class="absolute inset-0 bg-gradient-to-r from-slate-950 via-transparent to-transparent pointer-events-none z-10"></div>
+        
+        <div class="container mx-auto px-4 relative z-20 pointer-events-none">
+            <div class="max-w-md">
+                <h2 class="gsap-left text-brand-400 font-bold tracking-wide uppercase text-sm mb-3">Teknologi Internal</h2>
+                <h3 class="gsap-left text-4xl font-bold mb-4">Di Balik MAYA</h3>
+                <p class="gsap-left text-slate-300 mb-8">
+                    Visualisasi interaktif <em>State Machine</em> dan alur routing intent sistem bot. Arahkan kursor atau sentuh node untuk melihat fungsionalitasnya.
+                </p>
+                <div class="gsap-left inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-lg text-sm text-white/80">
+                    <i class="ph ph-cursor-click"></i> Sentuh Node 3D di layar
+                </div>
+            </div>
+            
+            <div id="arch-info" class="absolute right-4 top-1/2 transform -translate-y-1/2 w-64 bg-slate-900/90 backdrop-blur-xl border border-slate-700 p-5 rounded-2xl shadow-2xl transition-all duration-300 opacity-0 scale-95 pointer-events-auto">
+                <div class="w-10 h-10 rounded-full bg-brand-500/20 flex items-center justify-center text-brand-400 mb-3" id="arch-icon"><i class="ph-fill ph-cpu text-xl"></i></div>
+                <h4 id="arch-title" class="font-bold text-white text-lg mb-2">Node Name</h4>
+                <p id="arch-desc" class="text-sm text-slate-400 leading-relaxed">Description goes here.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- TECHNOLOGY & SYSTEM STATUS -->
+    <section class="py-24 relative z-10 bg-slate-50 dark:bg-dark-surface">
+        <div class="container mx-auto px-4 lg:px-8">
+            <div class="grid lg:grid-cols-3 gap-8">
+                
+                <div class="gsap-up lg:col-span-1">
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Tech Stack</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <span class="px-4 py-2 glass rounded-lg text-sm font-medium border-slate-200 dark:border-slate-700 flex items-center gap-2"><i class="ph-fill ph-file-html text-orange-500"></i> HTML5</span>
+                        <span class="px-4 py-2 glass rounded-lg text-sm font-medium border-slate-200 dark:border-slate-700 flex items-center gap-2"><i class="ph-fill ph-file-css text-blue-500"></i> CSS3</span>
+                        <span class="px-4 py-2 glass rounded-lg text-sm font-medium border-slate-200 dark:border-slate-700 flex items-center gap-2"><i class="ph-fill ph-file-js text-yellow-500"></i> JavaScript</span>
+                        <span class="px-4 py-2 glass rounded-lg text-sm font-medium border-slate-200 dark:border-slate-700 flex items-center gap-2"><i class="ph-fill ph-cube text-purple-500"></i> Three.js</span>
+                        <span class="px-4 py-2 glass rounded-lg text-sm font-medium border-slate-200 dark:border-slate-700 flex items-center gap-2"><i class="ph-fill ph-node-logo text-green-500"></i> Node.js (Bot)</span>
+                    </div>
+                </div>
+
+                <div class="gsap-up lg:col-span-1" style="transition-delay: 100ms;">
+                    <div class="flex items-center justify-between mb-6">
+                        <h3 class="text-2xl font-bold text-slate-900 dark:text-white">Status Sistem</h3>
+                    </div>
+                    <div class="glass-card rounded-2xl p-6 space-y-4">
+                        <div class="flex justify-between items-center"><span class="text-sm font-medium">MAYA System</span><span class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold animate-pulse">DEMO MODE</span></div>
+                        <div class="h-px bg-slate-200 dark:bg-slate-700"></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-slate-600 dark:text-slate-400">WhatsApp Gateway</span><span class="text-xs text-green-500 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>Connected</span></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-slate-600 dark:text-slate-400">Service Engine</span><span class="text-xs text-green-500 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 bg-green-500 rounded-full"></span>Active</span></div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-slate-600 dark:text-slate-400">Human Support (CS)</span><span class="text-xs text-amber-500 font-bold flex items-center gap-1"><span class="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>Standby</span></div>
+                    </div>
+                </div>
+
+                <div class="gsap-up lg:col-span-1" style="transition-delay: 200ms;">
+                    <h3 class="text-2xl font-bold text-slate-900 dark:text-white mb-6">Dirancang untuk Publik</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="glass-card p-4 rounded-xl text-center"><i class="ph-fill ph-shield-check text-2xl text-green-500 mb-2"></i><h4 class="font-bold text-xs mb-1">Anti-Spam</h4><p class="text-[10px] text-slate-500">Debounce protection</p></div>
+                        <div class="glass-card p-4 rounded-xl text-center"><i class="ph-fill ph-lock-key text-2xl text-blue-500 mb-2"></i><h4 class="font-bold text-xs mb-1">Session Control</h4><p class="text-[10px] text-slate-500">State Management</p></div>
+                        <div class="glass-card p-4 rounded-xl text-center"><i class="ph-fill ph-user-gear text-2xl text-orange-500 mb-2"></i><h4 class="font-bold text-xs mb-1">Human Handoff</h4><p class="text-[10px] text-slate-500">Admin Takeover</p></div>
+                        <div class="glass-card p-4 rounded-xl text-center"><i class="ph-fill ph-clock-counter-clockwise text-2xl text-purple-500 mb-2"></i><h4 class="font-bold text-xs mb-1">Semantic Log</h4><p class="text-[10px] text-slate-500">History tracking</p></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="py-24 relative z-10">
+        <div class="container mx-auto px-4 max-w-3xl">
+            <div class="text-center mb-12">
+                <h3 class="gsap-up text-3xl font-bold text-slate-900 dark:text-white mb-4">Pertanyaan Umum</h3>
+            </div>
+            <div class="space-y-4" id="faq-container"></div>
+        </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section class="py-24 relative z-10 overflow-hidden bg-brand-600 dark:bg-brand-900 text-center">
+        <div class="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Ccircle cx=\'2\' cy=\'2\' r=\'2\' fill=\'%23ffffff\'/%3E%3C/svg%3E')]"></div>
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                <i class="ph-fill ph-robot text-4xl text-brand-500"></i>
+            </div>
+            <h2 class="gsap-up text-4xl md:text-5xl font-extrabold text-white mb-6">Siap mencoba MAYA?</h2>
+            <p class="gsap-up text-xl text-brand-100 mb-10 max-w-2xl mx-auto font-light">
+                Pelayanan Desa, Semudah Chat. Hubungi nomor resmi MAYA sekarang juga.
+            </p>
+            <div class="gsap-up flex flex-col sm:flex-row justify-center gap-4">
+                <a href="https://wa.me/6285882370975" target="_blank" class="bg-white text-brand-600 px-8 py-4 rounded-full font-bold text-lg hover:bg-slate-50 transition-transform hover:scale-105 shadow-xl flex items-center justify-center gap-2">
+                    <i class="ph-fill ph-whatsapp-logo text-2xl"></i> Chat MAYA
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 text-slate-400 py-12 relative z-10 border-t border-slate-900">
+        <div class="container mx-auto px-4">
+            <div class="grid md:grid-cols-2 gap-8 items-center border-b border-slate-800 pb-8 mb-8">
+                <div>
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="ph-fill ph-robot text-2xl text-brand-500"></i>
+                        <span class="text-xl font-bold text-white tracking-wider">MAYA</span>
+                    </div>
+                    <p class="text-sm font-medium">Mitra Administrasi Desa Gayaman</p>
+                    <p class="text-xs text-brand-500 mt-1 italic">“Pelayanan Desa, Semudah Chat.”</p>
+                </div>
+                <div class="md:text-right flex gap-4 md:justify-end text-sm">
+                    <a href="#tentang" class="hover:text-white transition-colors">Tentang</a>
+                    <a href="#layanan" class="hover:text-white transition-colors">Layanan</a>
+                    <a href="#pakkades" class="hover:text-white transition-colors">PAK KADES</a>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between items-center text-xs text-slate-500">
+                <p>&copy; 2026 Akbar Syofiyunnas All rights reserved.</p>
+                <p class="mt-2 md:mt-0 px-3 py-1 border border-slate-800 rounded-full bg-slate-900">Independent Digital Service Experience Prototype</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- External Libs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <script>
+        /* =========================
+           GLOBAL UTILS & DATA
+           ========================= */
+        const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        // Content Data Injection
+        const servicesData = [
+            { icon: 'ph-file-text', title: 'Surat Domisili', desc: 'Informasi persyaratan pembuatan surat domisili.' },
+            { icon: 'ph-storefront', title: 'SKU', desc: 'Surat Keterangan Usaha untuk usaha Mikro/Besar.' },
+            { icon: 'ph-hand-heart', title: 'SKTM', desc: 'Surat Keterangan Tidak Mampu untuk RS atau Sekolah.' },
+            { icon: 'ph-users', title: 'Belum Menikah', desc: 'Syarat pengajuan surat keterangan lajang.' },
+            { icon: 'ph-magnifying-glass', title: 'Cek Status', desc: 'Lacak proses dokumen menggunakan NIK.' },
+            { icon: 'ph-identification-card', title: 'Kependudukan', desc: 'Panduan layanan KTP, KK, Akte Kelahiran & Kematian.' },
+            { icon: 'ph-device-mobile', title: 'PAK KADES', desc: 'Akses cepat ke portal pelayanan administrasi online.' },
+            { icon: 'ph-info', title: 'Info Layanan', desc: 'Jam operasional dan informasi umum pelayanan desa.' },
+            { icon: 'ph-headset', title: 'Hubungi Petugas', desc: 'Fitur Handoff untuk berbicara langsung dengan CS.' }
+        ];
+
+        const faqData = [
+            { q: 'Apa itu MAYA?', a: 'MAYA (Mitra Administrasi Desa Gayaman) adalah asisten digital berbasis WhatsApp yang membantu masyarakat memperoleh informasi layanan administrasi desa.' },
+            { q: 'Bagaimana cara menggunakan MAYA?', a: 'Cukup simpan nomor WhatsApp MAYA (62 858-8237-0975) dan kirim pesan seperti "Halo". MAYA akan membalas dengan daftar layanan.' },
+            { q: 'Apakah MAYA menggantikan perangkat desa?', a: 'Tidak. MAYA adalah asisten lini pertama. Jika butuh proses cetak atau masalah kompleks, Anda tetap akan dilayani oleh perangkat desa melalui fitur CS.' },
+            { q: 'Apa itu PAK KADES?', a: 'PAK KADES (Pelayanan Administrasi Kapan Saja) adalah program/portal layanan pengajuan online Desa Gayaman. MAYA dapat memberikan link langsung menuju PAK KADES.' },
+            { q: 'Bagaimana jika saya membutuhkan bantuan petugas?', a: 'Ketik "9" atau "CS" pada menu utama MAYA, dan percakapan Anda akan diteruskan kepada perangkat desa yang bertugas.' }
+        ];
+
+        const flowData = [
+            { num: '01', title: 'WARGA', desc: 'Mengirim pesan ke nomor WhatsApp MAYA.', icon: 'ph-user' },
+            { num: '02', title: 'WHATSAPP', desc: 'Pesan diterima dan diamankan oleh sistem.', icon: 'ph-whatsapp-logo' },
+            { num: '03', title: 'MAYA', desc: 'Menganalisis teks dan memahami kebutuhan (Intent Detection).', icon: 'ph-cpu' },
+            { num: '04', title: 'LAYANAN', desc: 'Memberikan informasi, syarat, atau link PAK KADES.', icon: 'ph-file-text', highlight: true },
+            { num: '05', title: 'PETUGAS', desc: 'Bantuan manual (CS) jika warga meminta.', icon: 'ph-headset' }
+        ];
+
+        // Populate HTML
+        document.addEventListener('DOMContentLoaded', () => {
+            // UI Setup
+            document.getElementById('service-grid').innerHTML = servicesData.map((s,i) => `
+                <div class="gsap-up glass-card p-6 rounded-2xl group hover:border-brand-500/50" style="transition-delay: ${i*50}ms">
+                    <div class="w-12 h-12 rounded-xl bg-brand-50 dark:bg-brand-900/20 flex items-center justify-center text-brand-500 mb-4 group-hover:-translate-y-2 group-hover:bg-brand-500 group-hover:text-white transition-all duration-300 shadow-sm"><i class="ph-fill ${s.icon} text-2xl"></i></div>
+                    <h4 class="text-lg font-bold mb-2">${s.title}</h4>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">${s.desc}</p>
+                </div>`).join('');
+
+            document.getElementById('faq-container').innerHTML = faqData.map((f,i) => `
+                <div class="gsap-up glass-card rounded-2xl overflow-hidden" style="transition-delay: ${i*50}ms">
+                    <button class="w-full px-6 py-4 flex justify-between items-center font-bold text-left hover:text-brand-500 transition-colors" onclick="this.nextElementSibling.classList.toggle('hidden'); this.querySelector('i').classList.toggle('rotate-180')">
+                        <span>${f.q}</span> <i class="ph-bold ph-caret-down transition-transform"></i>
+                    </button>
+                    <div class="hidden px-6 pb-5 text-sm text-slate-600 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800 pt-3">${f.a}</div>
+                </div>`).join('');
+
+            document.getElementById('flow-container').innerHTML = flowData.map((f, i) => `
+                <div class="gsap-up relative flex flex-col md:flex-row items-center gap-8 md:gap-16">
+                    <div class="md:w-1/2 flex ${i%2===0 ? 'justify-end' : 'justify-start md:order-2'}">
+                        <div class="glass-card p-6 rounded-2xl w-full md:max-w-sm ${i%2===0 ? 'text-right' : 'text-left'} ${f.highlight ? 'border-brand-500/50 shadow-brand-500/20' : ''}">
+                            <div class="flex items-center gap-3 mb-2 ${i%2===0 ? 'justify-end' : ''}">
+                                ${i%2!==0 ? `<i class="ph-fill ${f.icon} text-2xl text-slate-400"></i>` : ''}
+                                <h4 class="text-xl font-bold">${f.title}</h4>
+                                ${i%2===0 ? `<i class="ph-fill ${f.icon} text-2xl text-slate-400"></i>` : ''}
+                            </div>
+                            <p class="text-slate-600 dark:text-slate-400 text-sm">${f.desc}</p>
+                        </div>
+                    </div>
+                    <div class="absolute left-1/2 transform -translate-x-1/2 w-12 h-12 bg-white dark:bg-dark-surface border-4 ${f.highlight ? 'border-brand-500 text-brand-500' : 'border-slate-300 dark:border-slate-700 text-slate-500'} rounded-full flex items-center justify-center font-bold z-10 shadow-lg">${f.num}</div>
+                    <div class="md:w-1/2 hidden md:block ${i%2!==0 ? 'order-1' : ''}"></div>
+                </div>`).join('');
+
+            initTheme();
+            initLoader();
+            initMobileMenu();
+            initChatbotEngine();
+            
+            window.onload = () => {
+                if(!isReducedMotion) {
+                    initHeroThreeJS();
+                    initArchThreeJS();
+                    initGSAP();
+                } else {
+                    gsap.set(".gsap-hidden, .gsap-up, .gsap-left, .gsap-right, .gsap-stat", {opacity: 1, visibility: 'visible'});
+                }
+            };
+        });
+
+        /* =========================
+           CORE UI FUNCTIONS
+           ========================= */
+        function initTheme() {
+            const html = document.documentElement;
+            const btn = document.getElementById('theme-toggle');
+            const icon = document.getElementById('theme-icon');
+            
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                html.classList.add('dark'); icon.classList.replace('ph-moon', 'ph-sun');
+            }
+            btn.addEventListener('click', () => {
+                html.classList.toggle('dark');
+                const isDark = html.classList.contains('dark');
+                localStorage.theme = isDark ? 'dark' : 'light';
+                icon.className = `ph ph-${isDark ? 'sun' : 'moon'} text-lg dark:text-white`;
+                window.dispatchEvent(new Event('themeChanged'));
+            });
+        }
+
+        function initLoader() {
+            setTimeout(() => {
+                const loader = document.getElementById('loader');
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.display = 'none', 500);
+            }, 1000);
+            
+            // Navbar scroll
+            window.addEventListener('scroll', () => {
+                const nav = document.getElementById('navbar');
+                if (window.scrollY > 50) {
+                    nav.classList.add('bg-white/90', 'dark:bg-dark-bg/90', 'backdrop-blur-md', 'shadow-sm', 'py-2');
+                    nav.classList.remove('py-4', 'glass');
+                } else {
+                    nav.classList.remove('bg-white/90', 'dark:bg-dark-bg/90', 'backdrop-blur-md', 'shadow-sm', 'py-2');
+                    nav.classList.add('py-4', 'glass');
+                }
+            });
+        }
+
+        function initMobileMenu() {
+            const btn = document.getElementById('mobile-menu-btn');
+            const menu = document.getElementById('mobile-menu');
+            btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+            document.querySelectorAll('.mobile-link').forEach(l => l.addEventListener('click', () => menu.classList.add('hidden')));
+        }
+
+        /* =========================
+           CHATBOT ENGINE (Ported from Node.js)
+           ========================= */
+        function initChatbotEngine() {
+            const chatBox = document.getElementById('sim-chat-box');
+            const typingInd = document.getElementById('sim-typing');
+            const input = document.getElementById('sim-input');
+            const sendBtn = document.getElementById('sim-send');
+            const resetBtn = document.getElementById('sim-reset');
+            
+            // Engine State
+            let currentState = 'IDLE';
+            let isTyping = false;
+
+            const formatTime = () => new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit' }).format(new Date());
+
+            const addMessage = (text, isUser = false) => {
+                // Formatting WA text: *bold* -> <strong>bold</strong>, _italic_ -> <em>italic</em>
+                let formattedText = text.replace(/\*(.*?)\*/g, '<span class="wa-bold">$1</span>')
+                                        .replace(/_(.*?)_/g, '<span class="wa-italic">$1</span>');
+                
+                const timeStr = formatTime();
+                let html = '';
+                
+                if (isUser) {
+                    html = `<div class="max-w-[85%] self-end flex flex-col group msg-anim mb-2">
+                                <div class="bubble-out px-3 py-2 text-[14.2px] leading-snug relative break-words">
+                                    ${formattedText}
+                                    <div class="text-[10px] text-[#667781] dark:text-slate-400 text-right mt-1 flex items-center justify-end gap-1">
+                                        ${timeStr} <i class="ph-bold ph-checks text-[#53bdeb]"></i>
+                                    </div>
+                                </div>
+                            </div>`;
+                } else {
+                    html = `<div class="max-w-[85%] self-start flex flex-col group msg-anim mb-2">
+                                <div class="bubble-in px-3 py-2 text-[14.2px] leading-snug relative break-words">
+                                    ${formattedText}
+                                    <div class="text-[10px] text-slate-400 text-right mt-1">${timeStr}</div>
+                                </div>
+                            </div>`;
+                }
+                
+                typingInd.insertAdjacentHTML('beforebegin', html);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            };
+
+            const simulateBotType = async (delayMs) => {
+                isTyping = true;
+                typingInd.classList.remove('hidden');
+                chatBox.scrollTop = chatBox.scrollHeight;
+                return new Promise(resolve => setTimeout(() => {
+                    typingInd.classList.add('hidden');
+                    isTyping = false;
+                    resolve();
+                }, delayMs));
+            };
+
+            const getGreeting = () => {
+                const hour = new Date().getHours();
+                if (hour >= 3 && hour < 11) return "Selamat Pagi";
+                if (hour >= 11 && hour < 15) return "Selamat Siang";
+                if (hour >= 15 && hour < 18) return "Selamat Sore";
+                return "Selamat Malam";
+            };
+
+            const footerInfo = `\n\n💬 _Ketik *9* atau *CS* untuk bantuan Petugas, atau *0* ke Menu Utama._`;
+
+            const sendMainMenu = async () => {
+                const menu = `${getGreeting()} Warga Gayaman! 👋\n\nSaya *MAYA* (Mitra Administrasi Desa Gayaman), Asisten Digital Anda.\n\nSilakan pilih layanan yang ingin Anda gunakan dengan membalas *angka* di bawah ini:\n\n1️⃣ Surat Keterangan Domisili\n2️⃣ Surat Keterangan Usaha (SKU)\n3️⃣ Surat Keterangan Tidak Mampu (SKTM)\n4️⃣ Surat Keterangan Belum Menikah\n5️⃣ Cek Status Pengajuan Surat\n6️⃣ Layanan Kependudukan (KTP, KK, Akte)\n7️⃣ Layanan Online PAK KADES (Via HP)\n8️⃣ Informasi Persyaratan Layanan\n9️⃣ Hubungi Petugas Desa\n\n💬 _Ketik *CS* kapan saja untuk menghentikan bot dan chat dengan Perangkat Desa._`;
+                await simulateBotType(800);
+                addMessage(menu);
+            };
+
+            const detectIntent = (text) => {
+                const t = text.toLowerCase().trim();
+                if (/^(9|cs|bantuan|admin)$/i.test(t)) return 'HANDOFF';
+                if (/^(1)$/i.test(t) || /(domisili)/i.test(t)) return 'DOMISILI';
+                if (/^(2)$/i.test(t) || /(sku)/i.test(t)) return 'SKU';
+                if (/^(3)$/i.test(t) || /(sktm)/i.test(t)) return 'SKTM';
+                if (/^(4)$/i.test(t) || /(belum menikah)/i.test(t)) return 'BELUM_MENIKAH';
+                if (/^(5)$/i.test(t) || /(cek status)/i.test(t)) return 'CEK_STATUS';
+                if (/^(6)$/i.test(t) || /(kependudukan)/i.test(t)) return 'KEPENDUDUKAN';
+                if (/^(7)$/i.test(t) || /(pak kades)/i.test(t)) return 'PAK_KADES';
+                if (/^(8)$/i.test(t) || /(info)/i.test(t)) return 'INFO_LAYANAN';
+                return null;
+            };
+
+            const processInput = async (msg) => {
+                if(isTyping) return;
+                
+                const txt = msg.trim();
+                if(!txt) return;
+
+                addMessage(txt, true);
+                
+                const tLower = txt.toLowerCase();
+                const intent = detectIntent(txt);
+
+                // Global Cancel
+                if (["0", "batal", "kembali", "menu"].includes(tLower) && currentState !== 'IDLE') {
+                    currentState = 'IDLE';
+                    await simulateBotType(500);
+                    addMessage(`🔄 *Navigasi dibatalkan*. Anda kembali ke Menu Utama MAYA.`);
+                    await simulateBotType(800);
+                    sendMainMenu();
+                    return;
+                }
+
+                // IDLE State Routing
+                if (currentState === 'IDLE') {
+                    if (intent === 'DOMISILI') {
+                        currentState = 'MENU_DOMISILI';
+                        await simulateBotType(800);
+                        addMessage(`📄 *1. Surat Keterangan Domisili*\n\nSilakan pilih keperluan:\n1️⃣ Melamar Pekerjaan\n2️⃣ Buka Rekening Bank\n3️⃣ Keperluan Lainnya` + footerInfo);
+                    } else if (intent === 'SKU') {
+                        currentState = 'MENU_SKU';
+                        await simulateBotType(800);
+                        addMessage(`📄 *2. Surat Keterangan Usaha (SKU)*\n\nSilakan pilih skala usaha:\n1️⃣ Usaha Mikro / Kecil\n2️⃣ Usaha Menengah / Besar (PT/CV)` + footerInfo);
+                    } else if (intent === 'SKTM') {
+                        currentState = 'MENU_SKTM';
+                        await simulateBotType(800);
+                        addMessage(`📄 *3. Surat Keterangan Tidak Mampu (SKTM)*\n\nKeperluan apa?\n1️⃣ Rumah Sakit\n2️⃣ Beasiswa / KIP` + footerInfo);
+                    } else if (intent === 'BELUM_MENIKAH') {
+                        await simulateBotType(800);
+                        addMessage(`📄 *4. Surat Keterangan Belum Menikah*\n\n*Syarat:*\n- Foto KTP & KK\n- Pengantar RT/RW\n- Surat Pernyataan bermeterai.` + footerInfo);
+                    } else if (intent === 'CEK_STATUS') {
+                        currentState = 'CEK_STATUS_NIK';
+                        await simulateBotType(800);
+                        addMessage(`🔍 *5. Cek Status*\n\nKetikkan *16 Digit NIK* Anda.` + footerInfo);
+                    } else if (intent === 'KEPENDUDUKAN') {
+                        currentState = 'MENU_KEPENDUDUKAN';
+                        await simulateBotType(800);
+                        addMessage(`🪪 *6. Layanan Kependudukan*\n\nPilih layanan:\n1️⃣ KTP Rusak\n2️⃣ KTP Hilang\n3️⃣ KK Update... (dan lainnya)` + footerInfo);
+                    } else if (intent === 'PAK_KADES') {
+                        await simulateBotType(1200);
+                        addMessage(`📱 *Layanan Online PAK KADES*\n\nLayanan pengajuan dokumen mandiri via HP.\n🔗 *Link:* http://s.id/PAKKADESGAYAMAN` + footerInfo);
+                    } else if (intent === 'INFO_LAYANAN') {
+                        await simulateBotType(800);
+                        addMessage(`ℹ️ *Info*\nJam Kerja: Sen-Kam (08.00-14.00), Jum (08.00-11.00).\nSemua layanan GRATIS.` + footerInfo);
+                    } else if (intent === 'HANDOFF') {
+                        await simulateBotType(1000);
+                        addMessage(`👨‍💼 *MENGHUBUNGKAN KE PERANGKAT DESA...*\n\nMohon tunggu sejenak, Admin kami akan segera merespons.\n*(Simulasi: Ketik TUTUP CS untuk kembali)*`);
+                        currentState = 'CS_MODE';
+                    } else {
+                        sendMainMenu();
+                    }
+                    return;
+                }
+
+                // State Specific Logic
+                if (currentState === 'MENU_DOMISILI') {
+                    if (txt === '1' || txt === '2' || txt === '3') {
+                        currentState = 'IDLE';
+                        await simulateBotType(1000);
+                        addMessage(`📄 *Syarat Domisili:*\n- Fotokopi KTP & KK\n- Surat Pengantar RT/RW\n\n_Proses 1 Hari Kerja._` + footerInfo);
+                    } else {
+                        await simulateBotType(500); addMessage(`⚠️ Pilih angka *1*, *2*, atau *3*.` + footerInfo);
+                    }
+                } else if (currentState === 'MENU_SKU') {
+                    if (txt === '1' || txt === '2') {
+                        currentState = 'IDLE';
+                        await simulateBotType(1000);
+                        addMessage(`📄 *Syarat SKU:*\n- KTP & KK\n- Pengantar RT/RW\n- Foto tempat usaha\n\n_Bisa diajukan online via PAK KADES._` + footerInfo);
+                    } else {
+                        await simulateBotType(500); addMessage(`⚠️ Pilih angka *1* atau *2*.` + footerInfo);
+                    }
+                } else if (currentState === 'MENU_SKTM') {
+                    if (txt === '1' || txt === '2') {
+                        currentState = 'IDLE';
+                        await simulateBotType(1000);
+                        addMessage(`📄 *Syarat SKTM:*\n- KTP & KK\n- Pengantar RT/RW\n- Foto Rumah\n\n_Harap langsung ke loket balai desa._` + footerInfo);
+                    } else {
+                        await simulateBotType(500); addMessage(`⚠️ Pilih angka *1* atau *2*.` + footerInfo);
+                    }
+                } else if (currentState === 'CEK_STATUS_NIK') {
+                    const nik = txt.replace(/[^0-9]/g, '');
+                    if (nik.length === 16) {
+                        currentState = 'IDLE';
+                        await simulateBotType(1500);
+                        addMessage(`🔍 *Hasil Pencarian:*\nNIK: ${nik}\nStatus: 📝 *Menunggu Tanda Tangan Kades*` + footerInfo);
+                    } else {
+                        await simulateBotType(500); addMessage(`⚠️ NIK harus 16 digit angka.` + footerInfo);
+                    }
+                } else if (currentState === 'MENU_KEPENDUDUKAN') {
+                    if(txt === '1') {
+                        currentState = 'IDLE';
+                        await simulateBotType(1000); addMessage(`🪪 *Syarat KTP Rusak:*\n- Bawa KTP asli rusak\n- Bawa KK asli.` + footerInfo);
+                    } else {
+                        currentState = 'IDLE';
+                        await simulateBotType(800); addMessage(`📄 Persyaratan belum tersedia di MAYA.` + footerInfo);
+                    }
+                } else if (currentState === 'CS_MODE') {
+                    if (tLower === 'tutup cs') {
+                        currentState = 'IDLE';
+                        await simulateBotType(800);
+                        addMessage(`✅ *SESI BANTUAN DIAKHIRI*\n*MAYA* kembali mengambil alih layanan otomatis.`);
+                        setTimeout(sendMainMenu, 1500);
+                    } else {
+                        // Echo in CS mode just for demo
+                    }
+                }
+            };
+
+            const handleSend = () => {
+                const val = input.value;
+                input.value = '';
+                processInput(val);
+            };
+
+            sendBtn.addEventListener('click', handleSend);
+            input.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleSend(); });
+            resetBtn.addEventListener('click', () => {
+                document.querySelectorAll('.msg-anim').forEach(e => e.remove());
+                currentState = 'IDLE';
+                sendMainMenu();
+            });
+
+            // Start bot on intersection
+            const observer = new IntersectionObserver((e) => {
+                if(e[0].isIntersecting) {
+                    setTimeout(sendMainMenu, 500);
+                    observer.disconnect();
+                }
+            });
+            observer.observe(chatBox);
+        }
+
+        /* =========================
+           THREE.JS VISUALS
+           ========================= */
+        function initHeroThreeJS() {
+            const canvas = document.getElementById('hero-canvas');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            camera.position.z = 25;
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            const pCount = window.innerWidth < 768 ? 50 : 120;
+            const pos = new Float32Array(pCount * 3);
+            for(let i=0; i<pCount*3; i++) pos[i] = (Math.random() - 0.5) * 50;
+            
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            
+            const isDark = document.documentElement.classList.contains('dark');
+            const mat = new THREE.PointsMaterial({ size: 0.15, color: isDark?0x10b981:0x34d399, transparent:true, opacity:0.8 });
+            const points = new THREE.Points(geo, mat);
+            scene.add(points);
+
+            // Connect lines
+            const lineMat = new THREE.LineBasicMaterial({ color: isDark?0x10b981:0x34d399, transparent:true, opacity:0.15 });
+            const linePos = [];
+            for(let i=0; i<pCount/2; i++) {
+                let i1 = Math.floor(Math.random()*pCount)*3;
+                let i2 = Math.floor(Math.random()*pCount)*3;
+                linePos.push(pos[i1],pos[i1+1],pos[i1+2], pos[i2],pos[i2+1],pos[i2+2]);
+            }
+            const lineGeo = new THREE.BufferGeometry();
+            lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(linePos, 3));
+            const lines = new THREE.LineSegments(lineGeo, lineMat);
+            scene.add(lines);
+
+            let mouseX=0, mouseY=0;
+            document.addEventListener('mousemove', e => {
+                mouseX = (e.clientX - window.innerWidth/2) * 0.001;
+                mouseY = (e.clientY - window.innerHeight/2) * 0.001;
+            });
+
+            window.addEventListener('themeChanged', () => {
+                const dark = document.documentElement.classList.contains('dark');
+                const col = dark ? 0x10b981 : 0x34d399;
+                mat.color.setHex(col); lineMat.color.setHex(col);
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth/window.innerHeight; camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            const animate = () => {
+                requestAnimationFrame(animate);
+                points.rotation.y += 0.0005; lines.rotation.y += 0.0005;
+                points.rotation.x += (mouseY - points.rotation.x) * 0.05;
+                points.rotation.y += (mouseX - points.rotation.y) * 0.05;
+                renderer.render(scene, camera);
+            };
+            animate();
+        }
+
+        function initArchThreeJS() {
+            const canvas = document.getElementById('arch-canvas');
+            const cont = canvas.parentElement;
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(60, cont.clientWidth/cont.clientHeight, 0.1, 100);
+            camera.position.set(0, 0, 15);
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setSize(cont.clientWidth, cont.clientHeight);
+
+            const nodesData = [
+                { id: 'maya', name: 'MAYA Core Engine', desc: 'Sistem otak utama yang memproses webhook dari WhatsApp API.', pos: [0, 2, 0], col: 0x10b981, s: 1.5, i: 'ph-cpu' },
+                { id: 'intent', name: 'Intent Detection', desc: 'Menganalisis input teks warga untuk menentukan rute state machine.', pos: [0, -1, 0], col: 0x3b82f6, s: 1, i: 'ph-magnifying-glass' },
+                { id: 'domisili', name: 'State: Domisili', desc: 'Data persyaratan khusus untuk surat pengantar domisili.', pos: [-5, -5, 0], col: 0x64748b, s: 0.7, i: 'ph-file-text' },
+                { id: 'sku', name: 'State: SKU', desc: 'Data persyaratan Surat Keterangan Usaha.', pos: [-1.5, -6, 0], col: 0x64748b, s: 0.7, i: 'ph-storefront' },
+                { id: 'pakkades', name: 'Port: PAK KADES', desc: 'Integrasi URL ke layanan portal online pengajuan mandiri.', pos: [2, -6, 2], col: 0xeab308, s: 0.9, i: 'ph-device-mobile' },
+                { id: 'cs', name: 'Handoff System', desc: 'Menghentikan bot sementara dan meneruskan pesan ke Admin.', pos: [5, -4, -1], col: 0xf97316, s: 0.7, i: 'ph-headset' }
+            ];
+
+            const group = new THREE.Group(); scene.add(group);
+            const meshes = [];
+
+            nodesData.forEach(d => {
+                const mat = new THREE.MeshBasicMaterial({ color: d.col });
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 32), mat);
+                mesh.position.set(...d.pos); mesh.scale.set(d.s, d.s, d.s);
+                mesh.userData = d;
+                
+                const glow = new THREE.Mesh(new THREE.SphereGeometry(1,32,32), new THREE.MeshBasicMaterial({color: d.col, transparent:true, opacity:0.3}));
+                glow.scale.set(1.4,1.4,1.4);
+                glow.userData = d;
+                mesh.add(glow);
+                
+                group.add(mesh); meshes.push(mesh);
+            });
+
+            const lMat = new THREE.LineBasicMaterial({ color: 0x475569, transparent:true, opacity:0.6 });
+            const connect = (i1, i2) => {
+                const geo = new THREE.BufferGeometry().setFromPoints([meshes[i1].position, meshes[i2].position]);
+                group.add(new THREE.Line(geo, lMat));
+            };
+            connect(0,1); connect(1,2); connect(1,3); connect(1,4); connect(1,5);
+
+            const ray = new THREE.Raycaster(); const mouse = new THREE.Vector2();
+            const panel = document.getElementById('arch-info');
+
+            const handleInteract = (e) => {
+                let clientX = e.clientX;
+                let clientY = e.clientY;
+                
+                if (e.touches && e.touches.length > 0) {
+                    clientX = e.touches[0].clientX;
+                    clientY = e.touches[0].clientY;
+                }
+
+                const r = renderer.domElement.getBoundingClientRect();
+                mouse.x = ((clientX - r.left)/r.width)*2-1; 
+                mouse.y = -((clientY - r.top)/r.height)*2+1;
+                
+                ray.setFromCamera(mouse, camera);
+                const inter = ray.intersectObjects(group.children, true);
+                let hit = inter.find(i => i.object.userData && i.object.userData.id);
+                
+                if(hit) {
+                    document.body.style.cursor = 'pointer';
+                    const d = hit.object.userData;
+                    document.getElementById('arch-title').innerText = d.name;
+                    document.getElementById('arch-desc').innerText = d.desc;
+                    document.getElementById('arch-icon').innerHTML = `<i class="ph-fill ${d.i} text-xl"></i>`;
+                    panel.classList.remove('opacity-0', 'scale-95');
+                } else {
+                    document.body.style.cursor = 'default';
+                    panel.classList.add('opacity-0', 'scale-95');
+                }
+            };
+
+            canvas.addEventListener('mousemove', handleInteract);
+            canvas.addEventListener('touchstart', handleInteract, { passive: true });
+            canvas.addEventListener('touchmove', handleInteract, { passive: true });
+
+            window.addEventListener('resize', () => {
+                renderer.setSize(cont.clientWidth, cont.clientHeight);
+                camera.aspect = cont.clientWidth/cont.clientHeight; camera.updateProjectionMatrix();
+            });
+
+            const anim = () => {
+                requestAnimationFrame(anim);
+                group.rotation.y += 0.002;
+                meshes.forEach(m => { m.children[0].scale.setScalar(1.4 + Math.sin(Date.now()*0.003 + m.position.x)*0.1); });
+                renderer.render(scene, camera);
+            };
+            
+            const obs = new IntersectionObserver(e => { if(e[0].isIntersecting) anim(); });
+            obs.observe(cont);
+        }
+
+        /* =========================
+           GSAP ANIMATIONS
+           ========================= */
+        function initGSAP() {
+            gsap.registerPlugin(ScrollTrigger);
+
+            gsap.utils.toArray('.gsap-hidden').forEach(el => {
+                gsap.fromTo(el, { autoAlpha: 0, y: 30 }, { autoAlpha: 1, y: 0, duration: 1, ease: "power3.out" });
+            });
+
+            gsap.utils.toArray('.gsap-up').forEach(el => {
+                gsap.fromTo(el, { autoAlpha: 0, y: 40 }, { autoAlpha: 1, y: 0, duration: 0.8, ease: "back.out(1.7)", scrollTrigger: { trigger: el, start: "top 90%" }});
+            });
+
+            gsap.utils.toArray('.gsap-left').forEach(el => {
+                gsap.fromTo(el, { autoAlpha: 0, x: -50 }, { autoAlpha: 1, x: 0, duration: 0.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 85%" }});
+            });
+
+            gsap.utils.toArray('.gsap-right').forEach(el => {
+                gsap.fromTo(el, { autoAlpha: 0, x: 50 }, { autoAlpha: 1, x: 0, duration: 0.8, ease: "power2.out", scrollTrigger: { trigger: el, start: "top 85%" }});
+            });
+
+            document.querySelectorAll('.counter').forEach(c => {
+                ScrollTrigger.create({
+                    trigger: c, start: "top 90%", once: true,
+                    onEnter: () => gsap.to(c, { innerHTML: c.getAttribute('data-target'), duration: 2, snap: { innerHTML: 1 }, ease: "power2.out" })
+                });
+            });
+        }
+    </script>
+</body>
+</html>
